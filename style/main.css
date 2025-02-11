@@ -1,0 +1,19 @@
+.kanban-board {
+    display: flex;
+    justify-content: space-between;
+}
+
+.column {
+    width: 24%;
+    background-color: #f0f0f0;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+.task {
+    background-color: #fff;
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
