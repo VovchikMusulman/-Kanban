@@ -105,8 +105,8 @@ const app = new Vue({
                     </button>
                     <button v-if="columnIndex === 2" @click="returnTask(columnIndex, taskIndex)">Вернуть в работу</button>
                     <div>
-                        <button @click="editTask(columnIndex, taskIndex)">Редактировать</button>
-                        <button @click="deleteTask(columnIndex, taskIndex)">Удалить</button>
+                        <button v-if="columnIndex === 0 || columnIndex === 1 || columnIndex === 2" @click="editTask(columnIndex, taskIndex)">Редактировать</button>
+                        <button v-if="columnIndex === 0" @click="deleteTask(columnIndex, taskIndex)">Удалить</button>
                     </div>
                 </div>
                 <button v-if="columnIndex === 0" @click="showModal = true">Добавить задачу</button>
