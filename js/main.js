@@ -24,7 +24,8 @@ const app = new Vue({
                 const task = {
                     ...this.newTask,
                     createdAt: new Date().toLocaleString(),
-                    updatedAt: new Date().toLocaleString()
+                    updatedAt: new Date().toLocaleString(),
+                    status: '' // Статус задачи (выполнена в срок или просрочена)
                 };
                 this.columns[0].tasks.push(task);
                 this.resetNewTask();
@@ -53,6 +54,14 @@ const app = new Vue({
         },
         moveTask(fromColumnIndex, toColumnIndex, taskIndex) {
             const task = this.columns[fromColumnIndex].tasks.splice(taskIndex, 1)[0];
+
+            // Проверяем, если задача перемещается в четвертый столбец
+            if (toColumnIndex === 3) {
+                const deadlineDate = new Date(task.deadline);
+                const currentDate = new Date();
+                task.status = deadlineDate < currentDate ? 'Просроченная' : 'Выполненная в срок';
+            }
+
             this.columns[toColumnIndex].tasks.push(task);
         },
         returnTask(columnIndex, taskIndex) {
@@ -81,15 +90,16 @@ const app = new Vue({
     },
     template: `
         <div class="kanban-board">
-            <div class="column" v-for="(column, columnIndex) in columns" :key="columnIndex">
+            <div class="column" v-for=" (column, columnIndex) in columns" :key="columnIndex">
                 <h2>{{ column.title }}</h2>
                 <div class="task" v-for="(task, taskIndex) in column.tasks" :key="taskIndex">
                     <h3>{{ task.title }}</h3>
                     <p><strong>Описание:</strong> {{ task.description }}</p>
                     <p><strong>Создано:</strong> {{ task.createdAt }}</p>
                     <p><strong>Обновлено:</strong> {{ task.updatedAt }}</p>
-                    <p><strong> Дэдлайн:</strong> {{ task.deadline }}</p>
+                    <p><strong>Дэдлайн:</strong> {{ task.deadline }}</p>
                     <p v-if="task.returnReason"><strong>Причина возврата:</strong> {{ task.returnReason }}</p>
+                    <p v-if="task.status"><strong>Статус:</strong> {{ task.status }}</p>
                     <button v-if="columnIndex < 3" @click="moveTask(columnIndex, columnIndex + 1, taskIndex)">
                         {{ getNextColumnTitle(columnIndex) }}
                     </button>
