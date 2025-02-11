@@ -1,4 +1,3 @@
-// Подключаем Vue
 const app = new Vue({
     el: '#app',
     data: {
@@ -12,7 +11,8 @@ const app = new Vue({
             title: '',
             description: '',
             deadline: ''
-        }
+        },
+        showModal: false
     },
     methods: {
         addTask() {
@@ -24,6 +24,7 @@ const app = new Vue({
                 };
                 this.columns[0].tasks.push(task);
                 this.newTask = { title: '', description: '', deadline: '' };
+                this.showModal = false; // Закрыть модальное окно
             }
         },
         deleteTask(columnIndex, taskIndex) {
@@ -56,10 +57,19 @@ const app = new Vue({
                     <button @click="moveTask(columnIndex, columnIndex + 1, taskIndex)">Переместить в следующую колонку</button>
                     <button @click="deleteTask(columnIndex, taskIndex)">Удалить</button>
                 </div>
-                <input v-model="newTask.title" placeholder="Заголовок задачи" />
-                <textarea v-model="newTask.description" placeholder="Описание задачи"></textarea>
-                <input type="date" v-model="newTask.deadline" />
-                <button @click="addTask">Добавить задачу</button>
+                <button v-if="columnIndex === 0" @click="showModal = true">Добавить задачу</button>
+            </div>
+
+            <!-- Модальное окно для добавления задачи -->
+            <div v-if="showModal" class="modal">
+                <div class="modal-content">
+                    <span class="close" @click="showModal = false">&times;</span>
+                    <h2>Добавить задачу</h2>
+                    <input v-model="newTask.title" placeholder="Заголовок задачи" />
+                    <textarea v-model="newTask.description" placeholder="Описание задачи"></textarea>
+                    <input type="date" v-model="newTask.deadline" />
+                    <button @click="addTask">Добавить задачу</button>
+                </div>
             </div>
         </div>
     `
