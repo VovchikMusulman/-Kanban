@@ -19,8 +19,8 @@ const app = new Vue({
             if (this.newTask.title) {
                 const task = {
                     ...this.newTask,
-                    createdAt: new Date(),
-                    updatedAt: new Date()
+                    createdAt: new Date().toLocaleString(), // Форматируем дату
+                    updatedAt: new Date().toLocaleString()
                 };
                 this.columns[0].tasks.push(task);
                 this.newTask = { title: '', description: '', deadline: '' };
@@ -32,7 +32,7 @@ const app = new Vue({
         },
         editTask(columnIndex, taskIndex, updatedTask) {
             const task = this.columns[columnIndex].tasks[taskIndex];
-            Object.assign(task, updatedTask, { updatedAt: new Date() });
+            Object.assign(task, updatedTask, { updatedAt: new Date().toLocaleString() });
         },
         moveTask(fromColumnIndex, toColumnIndex, taskIndex) {
             const task = this.columns[fromColumnIndex].tasks.splice(taskIndex, 1)[0];
@@ -58,11 +58,10 @@ const app = new Vue({
                 <h2>{{ column.title }}</h2>
                 <div class="task" v-for="(task, taskIndex) in column.tasks" :key="taskIndex">
                     <h3>{{ task.title }}</h3>
-                    <p>{{ task.description }}</p>
-                    <p>Создано: {{ task.createdAt }}</p>
-                    <p>Обновлено: {{ task.updatedAt }}</p>
-                    <p>Дэдлайн: {{ task.deadline }}</p>
-                    <!-- Кнопка с изменяющимся текстом -->
+                    <p><strong>Описание:</strong> {{ task.description }}</p>
+                    <p><strong>Создано:</strong> {{ task.createdAt }}</p>
+                    <p><strong>Обновлено:</strong> {{ task.updatedAt }}</p>
+                    <p><strong>Дэдлайн:</strong> {{ task.deadline }}</p>
                     <button v-if="columnIndex < 3" @click="moveTask(columnIndex, columnIndex + 1, taskIndex)">
                         {{ getNextColumnTitle(columnIndex) }}
                     </button>
@@ -71,7 +70,6 @@ const app = new Vue({
                 <button v-if="columnIndex === 0" @click="showModal = true">Добавить задачу</button>
             </div>
 
-            <!-- Модальное окно для добавления задачи -->
             <div v-if="showModal" class="modal">
                 <div class="modal-content">
                     <span class="close" @click="showModal = false">&times;</span>
