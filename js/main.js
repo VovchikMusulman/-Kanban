@@ -38,6 +38,14 @@ const app = new Vue({
             const task = this.columns[fromColumnIndex].tasks.splice(taskIndex, 1)[0];
             this.columns[toColumnIndex].tasks.push(task);
         },
+        getNextColumnTitle(columnIndex) {
+            switch (columnIndex) {
+                case 0: return 'В Работу';
+                case 1: return 'В Тестирование';
+                case 2: return 'Выполнено';
+                default: return '';
+            }
+        },
         checkDeadline(task) {
             const deadlineDate = new Date(task.deadline);
             const isOverdue = deadlineDate < new Date();
@@ -54,7 +62,10 @@ const app = new Vue({
                     <p>Создано: {{ task.createdAt }}</p>
                     <p>Обновлено: {{ task.updatedAt }}</p>
                     <p>Дэдлайн: {{ task.deadline }}</p>
-                    <button @click="moveTask(columnIndex, columnIndex + 1, taskIndex)">Переместить в следующую колонку</button>
+                    <!-- Кнопка с изменяющимся текстом -->
+                    <button v-if="columnIndex < 3" @click="moveTask(columnIndex, columnIndex + 1, taskIndex)">
+                        {{ getNextColumnTitle(columnIndex) }}
+                    </button>
                     <button @click="deleteTask(columnIndex, taskIndex)">Удалить</button>
                 </div>
                 <button v-if="columnIndex === 0" @click="showModal = true">Добавить задачу</button>
