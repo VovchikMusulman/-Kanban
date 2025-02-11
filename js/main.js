@@ -12,27 +12,41 @@ const app = new Vue({
             description: '',
             deadline: ''
         },
-        showModal: false
+        showModal: false,
+        editingTaskIndex: null,
+        editingColumnIndex: 0 // Индекс колонки, в которой редактируется задача
     },
     methods: {
         addTask() {
             if (this.newTask.title) {
                 const task = {
                     ...this.newTask,
-                    createdAt: new Date().toLocaleString(), // Форматируем дату
+                    createdAt: new Date().toLocaleString(),
                     updatedAt: new Date().toLocaleString()
                 };
                 this.columns[0].tasks.push(task);
-                this.newTask = { title: '', description: '', deadline: '' };
+                this.resetNewTask();
                 this.showModal = false; // Закрыть модальное окно
             }
         },
         deleteTask(columnIndex, taskIndex) {
             this.columns[columnIndex].tasks.splice(taskIndex, 1);
         },
-        editTask(columnIndex, taskIndex, updatedTask) {
+        editTask(columnIndex, taskIndex) {
             const task = this.columns[columnIndex].tasks[taskIndex];
-            Object.assign(task, updatedTask, { updatedAt: new Date().toLocaleString() });
+            this.newTask = { ...task }; // Заполняем форму редактирования
+            this.editingTaskIndex = taskIndex;
+            this.editingColumnIndex = columnIndex;
+            this.showModal = true; // Открываем модальное окно для редактирования
+        },
+        saveEditedTask() {
+            if (this.newTask.title) {
+                const task = this.columns[this.editingColumnIndex].tasks[this.editingTaskIndex];
+                Object.assign(task, this.newTask, { updatedAt: new Date().toLocaleString() });
+                this.resetNewTask();
+                this.showModal = false; // Закрыть модальное окно
+                this.editingTaskIndex = null; // Сбросить индекс редактируемой задачи
+            }
         },
         moveTask(fromColumnIndex, toColumnIndex, taskIndex) {
             const task = this.columns[fromColumnIndex].tasks.splice(taskIndex, 1)[0];
@@ -46,10 +60,8 @@ const app = new Vue({
                 default: return '';
             }
         },
-        checkDeadline(task) {
-            const deadlineDate = new Date(task.deadline);
-            const isOverdue = deadlineDate < new Date();
-            return isOverdue ? 'Просроченная' : 'Выполненная в срок';
+        resetNewTask() {
+            this.newTask = { title: '', description: '', deadline: '' };
         }
     },
     template: `
@@ -66,18 +78,22 @@ const app = new Vue({
                         {{ getNextColumnTitle(columnIndex) }}
                     </button>
                     <button @click="deleteTask(columnIndex, taskIndex)">Удалить</button>
+                    <button @click="editTask(columnIndex, taskIndex)">Редактировать</button>
                 </div>
                 <button v-if="columnIndex === 0" @click="showModal = true">Добавить задачу</button>
             </div>
 
+            <!-- Модальное окно для добавления/редактирования задачи -->
             <div v-if="showModal" class="modal">
                 <div class="modal-content">
                     <span class="close" @click="showModal = false">&times;</span>
-                    <h2>Добавить задачу</h2>
+                    <h2>{{ editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу' }}</h2>
                     <input v-model="newTask.title" placeholder="Заголовок задачи" />
                     <textarea v-model="newTask.description" placeholder="Описание задачи"></textarea>
-                    <input type="date" v-model="newTask.deadline" />
-                    <button @click="addTask">Добавить задачу</button>
+                    <input type ="date" v-model="newTask.deadline" />
+                    <button @click="editingTaskIndex !== null ? saveEditedTask() : addTask()">
+                        {{ editingTaskIndex !== null ? 'Сохранить изменения' : 'Добавить задачу' }}
+                    </button>
                 </div>
             </div>
         </div>
