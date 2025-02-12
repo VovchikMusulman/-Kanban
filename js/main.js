@@ -1,48 +1,97 @@
+// Определение компонента задачи
 Vue.component('task', {
     props: ['task', 'columnIndex', 'taskIndex', 'getNextColumnTitle'],
     template: `
-            <div class="task">
-                <h3>{{ task.title }}</h3>
-                <p><strong>Описание:</strong> {{ task.description }}</p>
-                <p><strong>Создано:</strong> {{ task.createdAt }}</p>
-                <p><strong>Обновлено:</strong> {{ task.updatedAt }}</p>
-                <p><strong>Дэдлайн:</strong> {{ task.deadline }}</p>
-                <p v-if="task.returnReason"><strong>Причина возврата:</strong> {{ task.returnReason }}</p>
-                <p v-if="task.status"><strong>Статус:</strong> {{ task.status }}</p>
-                <button v-if="columnIndex < 3" @click="$emit('move-task', columnIndex, columnIndex + 1, taskIndex)">
-                    {{ getNextColumnTitle(columnIndex) }}
-                </button>
-                <button v-if="columnIndex === 2" @click="$emit('return-task', columnIndex, taskIndex)">Вернуть в работу</button>
-                <div>
-                    <button v-if="columnIndex === 0 || columnIndex === 1 || columnIndex === 2" @click="$emit('edit-task', columnIndex, taskIndex)">Редактировать</button>
-                    <button v-if="columnIndex === 0" @click="$emit('delete-task', columnIndex, taskIndex)">Удалить</button>
-                </div>
+        <div class="task">
+            <h3>{{ task.title }}</h3>
+            <p><strong>Описание:</strong> {{ task.description }}</p>
+            <p><strong>Создано:</strong> {{ task.createdAt }}</p>
+            <p><strong>Обновлено:</strong> {{ task.updatedAt }}</p>
+            <p><strong>Дэдлайн:</strong> {{ task.deadline }}</p>
+            <p v-if="task.returnReason"><strong>Причина возврата:</strong> {{ task.returnReason }}</p>
+            <p v-if="task.status"><strong>Статус:</strong> {{ task.status }}</p>
+            <button v-if="columnIndex < 3" @click="$emit('move-task', columnIndex, columnIndex + 1, taskIndex)">
+                {{ getNextColumnTitle(columnIndex) }}
+            </button>
+            <button v-if="columnIndex === 2" @click="$emit('return-task', columnIndex, taskIndex)">Вернуть в работу</button>
+            <div>
+                <button v-if="columnIndex === 0 || columnIndex === 1 || columnIndex === 2" @click="$emit('edit-task', columnIndex, taskIndex)">Редактировать</button>
+                <button v-if="columnIndex === 0" @click="$emit('delete-task', columnIndex, taskIndex)">Удалить</button>
             </div>
-        `
+        </div>
+    `
 });
 
+// Определение компонента колонки
 Vue.component('column', {
     props: ['column', 'columnIndex', 'addTask', 'getNextColumnTitle'],
     template: `
-            <div class="column">
-                <h2>{{ column.title }}</h2>
-                <task 
-                    v-for="(task, taskIndex) in column.tasks" 
-                    :key="taskIndex" 
-                    :task="task" 
-                    :columnIndex="columnIndex" 
-                    :taskIndex="taskIndex" 
-                    :getNextColumnTitle="getNextColumnTitle"
-                    @move-task="$emit('move-task', ...arguments)"
-                    @edit-task="$emit('edit-task', ...arguments)"
-                    @delete-task="$emit('delete-task', ...arguments)"
-                    @return-task="$emit('return-task', ...arguments)"
-                ></task>
-                <button v-if="columnIndex === 0" @click="addTask">Добавить задачу</button>
-            </div>
-        `
+        <div class="column">
+            <h2>{{ column.title }}</h2>
+            <task 
+                v-for="(task, taskIndex) in column.tasks" 
+                :key="taskIndex" 
+                :task="task" 
+                :columnIndex="columnIndex" 
+                :taskIndex="taskIndex" 
+                :getNextColumnTitle="getNextColumnTitle"
+                @move-task="$emit('move-task', ...arguments)"
+                @edit-task="$emit('edit-task', ...arguments)"
+                @delete-task="$emit('delete-task', ...arguments)"
+                @return-task="$emit('return-task', ...arguments)"
+            ></task>
+            <button v-if="columnIndex === 0" @click="addTask">Добавить задачу</button>
+        </div>
+    `
 });
 
+// Определение компонента модального окна для задач
+Vue.component('task-modal', {
+    props: {
+        showModal: Boolean,
+        newTask: Object,
+        editingTaskIndex: Number,
+        saveTask: Function,
+        closeModal: Function
+    },
+    template: `
+        <div v-if="showModal" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h2>{{ editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу' }}</h2>
+                <input v-model="newTask.title" placeholder="Заголовок задачи" maxlength="30"/>
+                <textarea v-model="newTask.description" placeholder="Описание задачи" maxlength="300"></textarea>
+                <p>Дедлайн:</p>
+                <input type="date" v-model="newTask.deadline" />
+                <button @click="saveTask">
+                    {{ editingTaskIndex !== null ? 'Сохранить изменения' : 'Добавить задачу' }}
+                </button>
+            </div>
+        </div>
+    `
+});
+
+// Определение компонента модального окна для возврата
+Vue.component('return-modal', {
+    props: {
+        showReturnModal: Boolean,
+        returnReason: String,
+        confirmReturn: Function,
+        closeModal: Function
+    },
+    template: `
+        <div v-if="showReturnModal" class="modal">
+            <div class="modal-content">
+                <span class="close" @click="closeModal">&times;</span>
+                <h2>Укажите причину возврата</h2>
+                <textarea v-model="returnReason" placeholder="Причина возврата"></textarea>
+                <button @click="confirmReturn">Подтвердить возврат</button>
+            </div>
+        </div>
+    `
+});
+
+// Основное приложение
 const app = new Vue({
     el: '#app',
     data: {
@@ -139,42 +188,36 @@ const app = new Vue({
         }
     },
     template: `
-            <div class="kanban-board">
-                <column 
-                    v-for="(column, columnIndex) in columns" 
-                    :key="columnIndex" 
-                    :column="column" 
-                    :columnIndex="columnIndex" 
-                    :addTask="openAddTaskModal" 
-                    :getNextColumnTitle="getNextColumnTitle"
-                    @move-task="moveTask"
-                    @edit-task="editTask"
-                    @delete-task="deleteTask"
-                    @return-task="returnTask"
-                ></column>
+        <div class="kanban-board">
+            <column 
+                v-for="(column, columnIndex) in columns" 
+                :key="columnIndex" 
+                :column="column" 
+                :columnIndex="columnIndex" 
+                :addTask="openAddTaskModal" 
+                :getNextColumnTitle="getNextColumnTitle"
+                @move-task="moveTask"
+                @edit-task="editTask"
+                @delete-task="deleteTask"
+                @return-task="returnTask"
+            ></column>
 
-                <div v-if="showModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close" @click="showModal = false">&times;</span>
-                        <h2>{{ editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу' }}</h2>
-                        <input v-model="newTask.title" placeholder="Заголовок задачи" maxlength="30"/>
-                        <textarea v-model="newTask.description" placeholder="Описание задачи" maxlength="300"></textarea>
-                        <p>Дедлайн:</p>
-                        <input type="date" v-model="newTask.deadline" />
-                        <button @click="editingTaskIndex !== null ? saveEditedTask() : addTask()">
-                            {{ editingTaskIndex !== null ? 'Сохранить изменения' : 'Добавить задачу' }}
-                        </button>
-                    </div>
-                </div>
+            <task-modal 
+                v-if="showModal" 
+                :showModal="showModal" 
+                :newTask="newTask" 
+                :editingTaskIndex="editingTaskIndex" 
+                :saveTask="editingTaskIndex !== null ? saveEditedTask : addTask" 
+                :closeModal="() => showModal = false"
+            ></task-modal>
 
-                <div v-if="showReturnModal" class="modal">
-                    <div class="modal-content">
-                        <span class="close" @click="showReturnModal = false">&times;</span>
-                        <h2>Укажите причину возврата</h2>
-                        <textarea v-model="returnReason" placeholder="Причина возврата"></textarea>
-                        <button @click="confirmReturn">Подтвердить возврат</button>
-                    </div>
-                </div>
-            </div>
-        `
+            <return-modal 
+                v-if="showReturnModal" 
+                :showReturnModal="showReturnModal" 
+                :returnReason="returnReason" 
+                :confirmReturn="confirmReturn" 
+                :closeModal="() => showReturnModal = false"
+            ></return-modal>
+        </div>
+    `
 });
