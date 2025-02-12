@@ -157,8 +157,8 @@ const app = new Vue({
                     <div class="modal-content">
                         <span class="close" @click="showModal = false">&times;</span>
                         <h2>{{ editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу' }}</h2>
-                        <input v-model="newTask.title" placeholder="Заголовок задачи" />
-                        <textarea v-model="newTask.description" placeholder="Описание задачи"></textarea>
+                        <input v-model="newTask.title" placeholder="Заголовок задачи" maxlength="30"/>
+                        <textarea v-model="newTask.description" placeholder="Описание задачи" maxlength="300"></textarea>
                         <p>Дедлайн:</p>
                         <input type="date" v-model="newTask.deadline" />
                         <button @click="editingTaskIndex !== null ? saveEditedTask() : addTask()">
