@@ -45,47 +45,36 @@ Vue.component('column', {
     `
 });
 
-// Определение компонента модального окна для задач
-Vue.component('task-modal', {
+// Определение компонента модального окна для задач и возвратов
+Vue.component('task-return-modal', {
     props: {
         showModal: Boolean,
         newTask: Object,
         editingTaskIndex: Number,
+        returnReason: String,
+        isReturn: Boolean,
         saveTask: Function,
+        confirmReturn: Function,
         closeModal: Function
     },
     template: `
         <div v-if="showModal" class="modal">
             <div class="modal-content">
                 <span class="close" @click="closeModal">&times;</span>
-                <h2>{{ editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу' }}</h2>
-                <input v-model="newTask.title" placeholder="Заголовок задачи" maxlength="30"/>
-                <textarea v-model="newTask.description" placeholder="Описание задачи" maxlength="300"></textarea>
-                <p>Дедлайн:</p>
-                <input type="date" v-model="newTask.deadline" />
-                <button @click="saveTask">
-                    {{ editingTaskIndex !== null ? 'Сохранить изменения' : 'Добавить задачу' }}
-                </button>
-            </div>
-        </div>
-    `
-});
-
-// Определение компонента модального окна для возврата
-Vue.component('return-modal', {
-    props: {
-        showReturnModal: Boolean,
-        returnReason: String,
-        confirmReturn: Function,
-        closeModal: Function
-    },
-    template: `
-        <div v-if="showReturnModal" class="modal">
-            <div class="modal-content">
-                <span class="close" @click="closeModal">&times;</span>
-                <h2>Укажите причину возврата</h2>
-                <textarea v-model="returnReason" placeholder="Причина возврата"></textarea>
-                <button @click="confirmReturn">Подтвердить возврат</button>
+                <h2>{{ isReturn ? 'Укажите причину возврата' : (editingTaskIndex !== null ? 'Редактировать задачу' : 'Добавить задачу') }}</h2>
+                <div v-if="!isReturn">
+                    <input v-model="newTask.title" placeholder="Заголовок задачи" maxlength="30"/>
+                    <textarea v-model="newTask.description" placeholder="Описание задачи" maxlength="300"></textarea>
+                    <p>Дедлайн:</p>
+                    <input type="date" v-model="newTask.deadline" />
+                    <button @click="saveTask">
+                        {{ editingTaskIndex !== null ? 'Сохранить изменения' : 'Добавить задачу' }}
+                    </button>
+                </div>
+                <div v-else>
+                    <textarea v-model="returnReason" placeholder="Причина возврата"></textarea>
+                    <button @click="confirmReturn">Подтвердить возврат</button>
+                </div>
             </div>
         </div>
     `
@@ -164,10 +153,10 @@ const app = new Vue({
         },
         confirmReturn() {
             const task = this.columns[this.editingColumnIndex].tasks[this.editingTaskIndex];
-            task.returnReason = this.returnReason;
-            this.moveTask(this.editingColumnIndex, 1, this.editingTaskIndex);
-            this.returnReason = '';
-            this.showReturnModal = false;
+            task.returnReason = this.returnReason; // Присваиваем причину возврата
+            this.moveTask(this.editingColumnIndex, 1, this.editingTaskIndex); // Перемещаем задачу в колонку "Задачи в работе"
+            this.returnReason = ''; // Сбрасываем причину возврата
+            this.showReturnModal = false; // Закрываем модальное окно
         },
         getNextColumnTitle(columnIndex) {
             switch (columnIndex) {
@@ -202,22 +191,17 @@ const app = new Vue({
                 @return-task="returnTask"
             ></column>
 
-            <task-modal 
-                v-if="showModal" 
-                :showModal="showModal" 
+            <task-return-modal 
+                v-if="showModal || showReturnModal" 
+                :showModal="showModal || showReturnModal" 
                 :newTask="newTask" 
                 :editingTaskIndex="editingTaskIndex" 
-                :saveTask="editingTaskIndex !== null ? saveEditedTask : addTask" 
-                :closeModal="() => showModal = false"
-            ></task-modal>
-
-            <return-modal 
-                v-if="showReturnModal" 
-                :showReturnModal="showReturnModal" 
                 :returnReason="returnReason" 
+                :isReturn="showReturnModal"
+                :saveTask="editingTaskIndex !== null ? saveEditedTask : addTask" 
                 :confirmReturn="confirmReturn" 
-                :closeModal="() => showReturnModal = false"
-            ></return-modal>
+                :closeModal="() => { showModal = false; showReturnModal = false; }"
+            ></task-return-modal>
         </div>
     `
 });
